@@ -50,9 +50,13 @@ class ORMCountWalker extends TreeWalkerAdapter
             }
         }
 
-        if (count($rootComponents) > 1) {
-            throw new \RuntimeException("Cannot count query which selects two FROM components, cannot make distinction");
-        }
+        // if (count($rootComponents) > 1) {
+
+        //     Exception commented out by DL.... we only want the first component
+        //     In every case, this will be the root entity.
+
+        //     throw new \RuntimeException("Cannot count query which selects two FROM components, cannot make distinction");
+        // }
 
         $root = reset($rootComponents);
         $parentName = key($root);
@@ -81,7 +85,7 @@ class ORMCountWalker extends TreeWalkerAdapter
                 new AggregateExpression('count', $pathExpression, $distinct), null
             )
         );
-        
+
         $groupByClause[] = $pathExpression;
         $AST->groupByClause = new \Doctrine\ORM\Query\AST\GroupByClause($groupByClause);
 
