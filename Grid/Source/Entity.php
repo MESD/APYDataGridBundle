@@ -436,16 +436,24 @@ class Entity extends Source
 
     public function getTotalCount($maxResults = null)
     {
+        // return 1;
         // From Doctrine\ORM\Tools\Pagination\Paginator::count()
         $countQuery = $this->query->getQuery();
+// print_r("<pre>");
+// print_r($this->query->getDqlParts()['select']);
+// print_r("<br><br>");
 
         if ( ! $countQuery->getHint(ORMCountWalker::HINT_DISTINCT)) {
             $countQuery->setHint(ORMCountWalker::HINT_DISTINCT, true);
         }
+// print_r($countQuery->getDql());
+// print_r("<br><br>");
 
         $countQuery->setHint(Query::HINT_CUSTOM_TREE_WALKERS, array('APY\DataGridBundle\Grid\Helper\ORMCountWalker'));
         $countQuery->setFirstResult(null)->setMaxResults($maxResults);
-
+// print_r($countQuery->getDql());
+// print_r("<br><br>");
+// die;
         try {
             $data = $countQuery->getScalarResult();
             $data = array_map('current', $data);
