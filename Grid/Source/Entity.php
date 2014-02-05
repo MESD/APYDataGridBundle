@@ -241,8 +241,35 @@ class Entity extends Source
         }
     }
 
-    protected function normalizeOperator($operator)
+    protected function specialCharacters($operator, $value)
     {
+        $last = strlen($value) - 1;
+        if ('"' == $value[0] && '"' == $value[$last]) {
+            $operator = Column::OPERATOR_EQ;
+            $value = substr($value, 1, $last - 1);
+            $last = strlen($value) - 1;
+        } else {
+            if ('^' == $value[0]) {
+                $operator = Column::OPERATOR_RLIKE;
+                $value = substr($value, 1, $last);
+                $last = strlen($value) - 1;
+            }
+            if ('$' == $value[$last]) {
+                $operator = Column::OPERATOR_LLIKE;
+                $value = substr($value, 0, $last);
+                $last = strlen($value) - 1;
+            }
+        }
+
+        return array('operator' => $operator, 'value' => $value);
+    }
+
+    protected function normalizeOperator($operator, $value)
+    {
+        $converted = $this->specialCharacters($operator, $value);
+        $operator = $converted['operator'];
+        $value = $converted['value'];
+
         switch ($operator) {
             //case Column::OPERATOR_REGEXP:
             case Column::OPERATOR_LIKE:
@@ -257,6 +284,10 @@ class Entity extends Source
 
     protected function normalizeValue($operator, $value)
     {
+        $converted = $this->specialCharacters($operator, $value);
+        $operator = $converted['operator'];
+        $value = $converted['value'];
+
         switch ($operator) {
             //case Column::OPERATOR_REGEXP:
             case Column::OPERATOR_LIKE:
@@ -339,7 +370,7 @@ class Entity extends Source
                 $sub = $isDisjunction ? $this->query->expr()->orx() : ($hasHavingClause ? $this->query->expr()->andx() : $where);
 
                 foreach ($filters as $filter) {
-                    $operator = $this->normalizeOperator($filter->getOperator());
+                    $operator = $this->normalizeOperator($filter->getOperator(), $filter->getValue());
 
                     $q = $this->query->expr()->$operator($this->getFieldName($column, false), "?$bindIndex");
 
