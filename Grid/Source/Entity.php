@@ -244,17 +244,17 @@ class Entity extends Source
     protected function specialCharacters($operator, $value)
     {
         $last = strlen($value) - 1;
-        if ('"' == $value[0] && '"' == $value[$last]) {
+        if ('"' === $value[0] && '"' === $value[$last]) {
             $operator = Column::OPERATOR_EQ;
             $value = substr($value, 1, $last - 1);
             $last = strlen($value) - 1;
         } else {
-            if ('^' == $value[0]) {
+            if ('^' === $value[0]) {
                 $operator = Column::OPERATOR_RLIKE;
                 $value = substr($value, 1, $last);
                 $last = strlen($value) - 1;
             }
-            if ('$' == $value[$last]) {
+            if ('$' === $value[$last]) {
                 $operator = Column::OPERATOR_LLIKE;
                 $value = substr($value, 0, $last);
                 $last = strlen($value) - 1;
@@ -372,7 +372,11 @@ class Entity extends Source
                 foreach ($filters as $filter) {
                     $operator = $this->normalizeOperator($filter->getOperator(), $filter->getValue());
 
-                    $q = $this->query->expr()->$operator($this->getFieldName($column, false), "?$bindIndex");
+                    if ('like' === $operator) {
+                        $q = $this->query->expr()->$operator('lower(' . $this->getFieldName($column, false) . ')', 'lower(' . "?$bindIndex" . ')');
+                    } else {
+                        $q = $this->query->expr()->$operator($this->getFieldName($column, false), "?$bindIndex");
+                    }
 
                     if ($filter->getOperator() == Column::OPERATOR_NLIKE) {
                         $q = $this->query->expr()->not($q);
